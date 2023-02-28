@@ -1,4 +1,5 @@
 ﻿using BepInEx;
+using Photon.Pun;
 using Photon.Voice.PUN;
 using System;
 using System.IO;
@@ -60,7 +61,7 @@ namespace GorillaSpeaks
         }
         void Update()
         {
-            if (voicethingy.IsSpeaking == true)
+            if (voicethingy.IsSpeaking == true || voicethingy.IsRecording)
             {
                Mouth.SetActive(true);
             }
