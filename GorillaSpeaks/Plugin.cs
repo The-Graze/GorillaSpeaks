@@ -1,4 +1,5 @@
 ﻿using BepInEx;
+using GorillaSpeaks.Patches;
 using Photon.Pun;
 using Photon.Voice.PUN;
 using System;
@@ -24,33 +25,20 @@ namespace GorillaSpeaks
             AssetBundle bundle = AssetBundle.LoadFromStream(str);
             GameObject sluber = bundle.LoadAsset<GameObject>("mouth");
             Mouth = sluber;
-            GorillaParent.instance.vrrigParent.AddComponent<Addermouth>();
+            HarmonyPatches.ApplyHarmonyPatches();
         }
     }
-    public class Addermouth : MonoBehaviour
-    {
-        void LateUpdate()
-        {
-            foreach (Transform child in transform)
-            {
-                if (child.gameObject.GetComponent<Mouthies>() == null)
-                {
-                    child.gameObject.AddComponent<Mouthies>();
-                }
-            }
-        }
-    }
+
 
     public class Mouthies : MonoBehaviour
     {
-
         GameObject Mouth;
         Plugin p;
         VRRig wig;
         PhotonVoiceView voicethingy;
         void Awake()
         {
-            p = GameObject.Find("BepInEx_Manager").GetComponent<GorillaSpeaks.Plugin>();
+            p = FindObjectOfType<Plugin>();
             wig = gameObject.GetComponent<VRRig>();
             Mouth = Instantiate(p.Mouth);
             Mouth.transform.parent = wig.headMesh.transform.Find("gorillaface");
@@ -61,14 +49,7 @@ namespace GorillaSpeaks
         }
         void Update()
         {
-            if (voicethingy.IsSpeaking == true || voicethingy.IsRecording)
-            {
-               Mouth.SetActive(true);
-            }
-            else
-            {
-                Mouth.SetActive(false);
-            }
+            Mouth.SetActive(voicethingy.IsSpeaking || voicethingy.IsRecording);
         }
     }
 }
