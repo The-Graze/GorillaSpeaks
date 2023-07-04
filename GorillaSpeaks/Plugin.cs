@@ -11,12 +11,12 @@ using Utilla;
 
 namespace GorillaSpeaks
 {
-    [ModdedGamemode]
     [BepInDependency("org.legoandmars.gorillatag.utilla", "1.5.0")]
     [BepInPlugin(PluginInfo.GUID, PluginInfo.Name, PluginInfo.Version)]
     public class Plugin : BaseUnityPlugin
     {
         public GameObject Mouth;
+        public static volatile Plugin Instance;
         void Start()
         { Utilla.Events.GameInitialized += OnGameInitialized;}
         void OnGameInitialized(object sender, EventArgs e)
@@ -26,6 +26,7 @@ namespace GorillaSpeaks
             GameObject sluber = bundle.LoadAsset<GameObject>("mouth");
             Mouth = sluber;
             HarmonyPatches.ApplyHarmonyPatches();
+            Instance = this;
         }
     }
 
@@ -33,23 +34,34 @@ namespace GorillaSpeaks
     public class Mouthies : MonoBehaviour
     {
         GameObject Mouth;
-        Plugin p;
-        VRRig wig;
-        PhotonVoiceView voicethingy;
-        void Awake()
+        Plugin p = Plugin.Instance;
+        public VRRig wig;
+        public PhotonVoiceView voicethingy;
+        void Start()
         {
-            p = FindObjectOfType<Plugin>();
-            wig = gameObject.GetComponent<VRRig>();
-            Mouth = Instantiate(p.Mouth);
-            Mouth.transform.parent = wig.headMesh.transform.Find("gorillaface");
-            Mouth.transform.localPosition = new Vector3(0, -0.0011f, 0);
-            Mouth.transform.localRotation = Quaternion.Euler(0, 0, 0);
-            voicethingy = gameObject.GetComponent<PhotonVoiceView>();
-            Mouth.GetComponent<Renderer>().material.shader = wig.headMesh.transform.Find("gorillaface").GetComponent<Renderer>().material.shader;
+            if (wig.isOfflineVRRig)
+            {
+                Destroy(this);
+                Destroy(Mouth);
+            }
+            else
+            {
+                Mouth = Instantiate(p.Mouth, wig.headMesh.transform.Find("gorillaface"));
+
+                if (Mouth != null)
+                {
+                    Mouth.transform.localPosition = new Vector3(0, -0.0011f, 0);
+                    Mouth.transform.localRotation = Quaternion.Euler(0, 0, 0);
+                    Mouth.GetComponent<Renderer>().material.shader = wig.headMesh.transform.Find("gorillaface").GetComponent<Renderer>().material.shader;
+                }
+            }
         }
         void Update()
         {
-            Mouth.SetActive(voicethingy.IsSpeaking || voicethingy.IsRecording);
+            if (Mouth != null)
+            {
+                Mouth.SetActive(voicethingy.IsSpeaking || voicethingy.IsRecording);
+            }
         }
     }
 }
